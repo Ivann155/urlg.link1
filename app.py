@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify, redirect, url_for, send_from_directory, send_file
+from flask_cors import CORS
 import random
 import io
 import qrcode
+import os
 
 app = Flask(__name__)
+CORS(app)
 
 # In-memory storage for short codes to URLs
 url_map = {}
@@ -26,34 +29,50 @@ def generate_pronounceable_code(length=3):
 def serve_index():
     return send_from_directory('.', 'index.html')
 
+@app.route('/health')
+def health_check():
+    return jsonify({'status': 'healthy', 'message': 'URL shortener service is running'})
+
 @app.route('/api/shorten', methods=['POST'])
 def shorten_url():
-    data = request.get_json()
-    long_url = data.get('url')
-    if not long_url:
-        return jsonify({'error': 'No URL provided'}), 400
-    
-    # Generate a unique pronounceable code
-    code = generate_pronounceable_code()
-    
-    # Ensure uniqueness by trying different codes if needed
-    attempts = 0
-    while code in url_map and attempts < 50:
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+            
+        long_url = data.get('url')
+        if not long_url:
+            return jsonify({'error': 'No URL provided'}), 400
+        
+        # Basic URL validation
+        if not long_url.startswith(('http://', 'https://')):
+            return jsonify({'error': 'Invalid URL format. Must start with http:// or https://'}), 400
+        
+        # Generate a unique pronounceable code
         code = generate_pronounceable_code()
-        attempts += 1
-    
-    # If still not unique after many attempts, add a number
-    if code in url_map:
-        base_code = code
-        counter = 1
-        while f"{base_code}{counter}" in url_map and counter < 10:
-            counter += 1
-        code = f"{base_code}{counter}"
-    
-    url_map[code] = long_url
-    # Use local server address so links actually work
-    short_url = request.host_url + code
-    return jsonify({'short_url': short_url})
+        
+        # Ensure uniqueness by trying different codes if needed
+        attempts = 0
+        while code in url_map and attempts < 50:
+            code = generate_pronounceable_code()
+            attempts += 1
+        
+        # If still not unique after many attempts, add a number
+        if code in url_map:
+            base_code = code
+            counter = 1
+            while f"{base_code}{counter}" in url_map and counter < 10:
+                counter += 1
+            code = f"{base_code}{counter}"
+        
+        url_map[code] = long_url
+        # Use request.host_url to get the correct base URL
+        short_url = request.host_url.rstrip('/') + '/' + code
+        return jsonify({'short_url': short_url})
+        
+    except Exception as e:
+        print(f"Error shortening URL: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/<code>')
 def redirect_to_long_url(code):
@@ -74,4 +93,4 @@ def get_qr_code(code):
     return send_file(buf, mimetype='image/png')
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
