@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a2e;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .sky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #3a5fc8 0%, #5d7ee6 50%, #7faaff 100%);
+            z-index: -2;
+        }
+
+        .ad-banner {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: #3a5fc8;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ad-banner.left {
+            left: 0;
+            border-right: 1px solid #e0e0e0;
+        }
+        .ad-banner.right {
+            right: 0;
+            border-left: 1px solid #e0e0e0;
+        }
+        .ad-content {
+            width: 200px;
+            height: 600px;
+            background: #3a5fc8;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #888;
+            text-align: center;
+        }
+        @media (max-width: 1200px) {
+            .ad-banner {
+                width: 190px;
+            }
+            .ad-content {
+                width: 150px;
+                height: 400px;
+            }
+        }
+        @media (max-width: 900px) {
+            .ad-banner {
+                display: none;
+            }
+        }
+        .main-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding-top: 200px;
+            min-height: 100vh;
+        }
+
+        .top-logo-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 1rem 0 1rem 0;
+            text-align: center;
+            background: transparent;
+        }
+
+        .nav-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 0.8rem 2rem;
+            margin: 0 auto 1.5rem auto;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .top-logo {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .top-logo .logo {
+            display: inline-block;
+        }
+
+        .top-logo .highlight {
+            color: #ffd700;
+        }
+
+        .top-logo .normal {
+            color: #ffffff;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ffd700;
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+
+        .logo .highlight {
+            color: #ffd700;
+        }
+
+        .logo .normal {
+            color: #ffffff;
+        }
+
+        .site-description {
+            color: #cccccc;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .cityscape {
+            display: none;
+        }
+        .form-container {
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            margin-top: 2rem;
+        }
+
+        .bonus-section {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            border: 2px solid #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        .bonus-section h3 {
+            color: #1a1a3a;
+            font-size: 1.3rem;
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+        }
+
+        .bonus-section p {
+            color: #1a1a3a;
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+            }
+        }
+        .form-card {
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            position: relative;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 15px solid #0a0a2e;
+        }
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .form-subtitle {
+            color: #cccccc;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 3px solid #0a0a2e;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #2a2a4a;
+            color: #ffffff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+        input[type="url"]::placeholder {
+            color: #888888;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #1a1a3a;
+            border: 3px solid #0a0a2e;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.4);
+        }
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        .result-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: #2a2a4a;
+            border: 2px solid #0a0a2e;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .short-link-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .short-link {
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: 600;
+            word-break: break-all;
+            font-size: 1rem;
+        }
+        .copy-btn {
+            background: #ffd700;
+            color: #1a1a3a;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .copy-btn.copied {
+            background: #1a1a3a;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+        }
+        .loading {
+            display: none;
+            margin-top: 1rem;
+            color: #cccccc;
+            text-align: center;
+        }
+        .error {
+            color: #ff6b6b;
+            background: #4a2a2a;
+            border: 2px solid #ff6b6b;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        .about-section {
+            display: none;
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 8rem auto 2rem auto;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            color: #ffffff;
+            line-height: 1.8;
+        }
+
+        .blog-section {
+            display: none;
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 8rem auto 2rem auto;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            color: #ffffff;
+            line-height: 1.8;
+        }
+
+        .legal-section {
+            display: none;
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 8rem auto 2rem auto;
+            max-width: 900px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            color: #ffffff;
+            line-height: 1.8;
+        }
+
+        .support-section {
+            display: none;
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 8rem auto 2rem auto;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            color: #ffffff;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .about-section h2,
+        .blog-section h2,
+        .legal-section h2,
+        .support-section h2 {
+            color: #ffd700;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .about-section h3,
+        .blog-section h3,
+        .legal-section h3,
+        .support-section h3 {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .about-section p,
+        .blog-section p,
+        .legal-section p,
+        .support-section p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .about-section ul,
+        .blog-section ul,
+        .legal-section ul,
+        .support-section ul {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        .about-section li,
+        .blog-section li,
+        .legal-section li,
+        .support-section li {
+            margin-bottom: 0.8rem;
+        }
+
+        .support-section .coming-soon {
+            font-size: 2rem;
+            color: #ffd700;
+            margin: 3rem 0;
+            font-weight: 600;
+        }
+
+        .legal-section h1 {
+            color: #ffd700;
+            font-size: 2rem;
+            margin: 3rem 0 1.5rem 0;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .legal-section h1:first-child {
+            margin-top: 0;
+        }
+
+        .legal-section strong {
+            color: #ffd700;
+        }
+
+        .legal-section hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 2rem 0;
+        }
+
+        .blog-meta {
+            text-align: center;
+            color: #cccccc;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .blog-content {
+            text-align: justify;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #1a1a3a;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.4);
+        }
+        @media (max-width: 768px) {
+            .top-logo {
+                font-size: 2.5rem;
+            }
+            .site-description {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+            .form-card {
+                padding: 1.5rem;
+                margin: 0 1rem;
+            }
+            .form-title {
+                font-size: 1.5rem;
+            }
+            .central-skyscraper {
+                width: 80px;
+            }
+            .skyscraper {
+                display: none;
+            }
+            .form-container {
+                top: 56%;
+            }
+        }
+        .qa-section {
+            display: none;
+            background: rgba(26, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 8rem auto 2rem auto;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0a0a2e;
+            color: #ffffff;
+            line-height: 1.8;
+        }
+
+        .qa-section h2 {
+            color: #ffd700;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .qa-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .qa-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .qa-question {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #ffd700;
+            transition: all 0.3s ease;
+        }
+
+        .qa-question:hover {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .qa-question.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .qa-toggle {
+            background: none;
+            border: none;
+            color: #ffd700;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .qa-toggle:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .qa-toggle.active {
+            transform: rotate(45deg);
+        }
+
+        .qa-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .qa-answer.active {
+            max-height: 500px;
+            padding: 1.5rem;
+        }
+
+        .qa-answer p {
+            margin: 0;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="sky"></div>
+    <div class="ad-banner left">
+        <div class="ad-content">
+        </div>
+    </div>
+    <div class="ad-banner right">
+        <div class="ad-content">
+        </div>
+    </div>
+    <div class="main-wrapper">
+        <div class="main-content">
+            <div class="top-logo-section">
+                <div class="nav-bar">
+                    <a href="#" class="nav-link">About Us</a>
+                    <a href="#" class="nav-link">Blog</a>
+                    <a href="#" class="nav-link">Legal</a>
+                    <a href="#" class="nav-link">Support</a>
+                    <a href="#" class="nav-link">Q&A</a>
+                </div>
+                <div class="top-logo">
+                    <span class="logo">
+                        <span class="highlight">url</span><span class="normal">G.link</span>
+                    </span>
+                </div>
+                <div id="site-description" class="site-description">Transform long URLs into short, memorable links instantly. Simple, fast, and reliable URL shortening service.</div>
+            </div>
+            <div class="cityscape">
+            </div>
+            <div class="form-container">
+                <div class="bonus-section">
+                    <h3>First Version Bonus</h3>
+                    <p>Get a friend to shorten one link and join a 50X $100 giveaway!</p>
+                </div>
+                <div class="form-card">
+                    <h2 class="form-title">Shorten a long link</h2>
+                    <p class="form-subtitle">No credit card required.</p>
+                    <form id="shorten-form">
+                        <div class="form-group">
+                            <label for="long-url" class="form-label">Paste your long link here</label>
+                            <input type="url" id="long-url" placeholder="https://example.com/my-long-url" required>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            Get your link for free
+                            <span>→</span>
+                        </button>
+                    </form>
+                    <div class="loading" id="loading">Shortening your link...</div>
+                    <div id="result-box" class="result-box" style="display:none;"></div>
+                    <div id="error-message" class="error" style="display:none;"></div>
+                </div>
+            </div>
+
+            <div id="about-section" class="about-section">
+                <h2>About urlG.link</h2>
+                
+                <h3>Our Mission</h3>
+                <p>At urlG.link, we believe that simplicity and efficiency should go hand in hand. Our mission is to transform the way people share and manage links by providing a fast, reliable, and user-friendly URL shortening service that makes digital communication effortless.</p>
+                
+                <h3>What We Do</h3>
+                <p>urlG.link is a cutting-edge URL shortening platform that converts long, unwieldy URLs into short, memorable links. Whether you're sharing content on social media, sending links via email, or creating marketing campaigns, our service ensures your links are clean, professional, and easy to share.</p>
+                
+                <h3>Why Choose urlG.link?</h3>
+                <ul>
+                    <li><strong>Lightning Fast:</strong> Generate short links in milliseconds with our optimized platform</li>
+                    <li><strong>100% Free:</strong> No hidden costs, no premium tiers - everything you need is completely free</li>
+                    <li><strong>Professional Quality:</strong> Clean, branded short URLs that enhance your online presence</li>
+                    <li><strong>Always Available:</strong> 99.9% uptime ensures your links work when you need them most</li>
+                    <li><strong>Privacy Focused:</strong> We don't track your personal information or browsing habits</li>
+                </ul>
+                
+                <h3>Our Story</h3>
+                <p>Founded with a simple vision - to eliminate the frustration of sharing long URLs - urlG.link has grown from a basic link shortener into a comprehensive digital tool trusted by individuals and businesses worldwide. We understand that in today's fast-paced digital world, every second counts, and every character matters.</p>
+                
+                <h3>Technology & Security</h3>
+                <p>Built with modern web technologies and security best practices, urlG.link ensures your links are not only fast but also secure. Our platform uses advanced algorithms to generate unique, collision-free short codes, while maintaining the highest standards of data protection and user privacy.</p>
+                
+                <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+
+            <div id="blog-section" class="blog-section">
+                <h2>Our Blog</h2>
+                <div class="blog-meta">
+                    <p>Latest Posts</p>
+                </div>
+                <div class="blog-content">
+                    <h3>Why URL Shortening is Essential for Modern Marketing</h3>
+                    <p>In today's digital age, the length of URLs can significantly impact user engagement and conversion rates. Long, complex URLs can deter users from clicking, especially on mobile devices. URL shortening services like urlG.link provide a clean, professional, and memorable way to share links, making them more appealing and easier to share across various platforms.</p>
+                    <p>Our platform offers a range of features to enhance your link management and tracking. Whether you're a marketer, content creator, or business owner, urlG.link helps you create and manage short, branded links effortlessly. Our intuitive interface and powerful analytics make it simple to monitor link performance and optimize your campaigns.</p>
+                    <p>Don't let long, cluttered URLs hold your marketing efforts back. Try urlG.link today and unlock the full potential of your digital campaigns!</p>
+                </div>
+                <div class="blog-meta">
+                    <p>More Articles</p>
+                </div>
+                <div class="blog-content">
+                    <h3>The Future of URL Shortening: AI and Machine Learning</h3>
+                    <p>As artificial intelligence and machine learning continue to evolve, URL shortening platforms are becoming more sophisticated. We're excited to see how these technologies will shape the future of link management and user experience.</p>
+                    <p>Stay tuned for our upcoming blog posts on the latest trends and innovations in the URL shortening industry.</p>
+                </div>
+                <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+
+            <div id="legal-section" class="legal-section">
+                <h1>Privacy Policy</h1>
+                <p><em>Last Updated: August 23, 2025</em></p>
+                <p>This Privacy Policy governs the manner in which this website ("Service," "we," "us," or "our") handles user information. We are committed to transparency and wish to clarify the following:</p>
+                
+                <h3>1. No Collection of Personal Data</h3>
+                <p>At present, we do not collect, process, or retain any personally identifiable information (PII) from users.</p>
+                
+                <h3>2. No Use of Data</h3>
+                <p>Since no data is collected, no such data is used, shared, sold, or otherwise processed in any manner.</p>
+                
+                <h3>3. Advertising</h3>
+                <p>Currently, the Service does not employ third-party advertisements or tracking technologies. However, advertisements may be introduced in the future. Should this occur, this Policy will be amended accordingly to reflect the nature of such practices, including disclosures regarding third-party vendors and cookies.</p>
+                
+                <h3>4. Contact Information</h3>
+                <p>A dedicated contact channel for inquiries, requests, and complaints will be made available in the near future and reflected herein.</p>
+                
+                <p>By continuing to use the Service, you acknowledge and agree to this Privacy Policy.</p>
+                
+                <hr>
+                
+                <h1>Terms of Service</h1>
+                <p><em>Last Updated: August 23, 2025</em></p>
+                <p>These Terms of Service ("Terms") govern access to and use of this website ("Service"). By utilizing the Service, you acknowledge and accept these Terms in their entirety. If you disagree, you must refrain from using the Service.</p>
+                
+                <h3>1. Purpose of Service</h3>
+                <p>The Service exists solely to provide URL shortening functionality. It is not intended for any other purpose.</p>
+                
+                <h3>2. User Responsibility</h3>
+                <p>Users are solely and entirely responsible for the content of the links they shorten and distribute through the Service. The Service does not endorse, monitor, or verify the accuracy, legality, or safety of any third-party content.</p>
+                
+                <h3>3. Prohibited Use</h3>
+                <p>Users must not employ the Service to create or disseminate links that:</p>
+                <ul>
+                    <li>Contain or promote illegal, harmful, defamatory, obscene, or fraudulent material;</li>
+                    <li>Facilitate phishing, malware distribution, spamming, or other malicious activity;</li>
+                    <li>Violate any applicable laws, regulations, or intellectual property rights.</li>
+                </ul>
+                
+                <h3>4. Limitation of Liability</h3>
+                <p>The Service is provided strictly "as is," without warranties of any kind, whether express or implied. To the maximum extent permitted by law, we disclaim all liability for any direct, indirect, incidental, consequential, or special damages arising out of or relating to the use or inability to use the Service. All actions taken through the Service are undertaken at the user's sole risk.</p>
+                
+                <h3>5. Termination</h3>
+                <p>We reserve the right, in our sole discretion, to suspend or terminate access to the Service at any time and without notice, particularly in cases of violation of these Terms.</p>
+                
+                <h3>6. Amendments</h3>
+                <p>We may revise these Terms at any time by updating this page. Continued use of the Service constitutes acceptance of any such modifications.</p>
+                
+                <hr>
+                
+                <h1>Cookies</h1>
+                <p>At this time, the Service does not use cookies or other tracking technologies. Should this change, a comprehensive Cookie Policy and consent mechanism will be implemented and made available to all users prior to activation.</p>
+                
+                <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+
+            <div id="support-section" class="support-section">
+                <h2>Support</h2>
+                <div class="coming-soon">
+                    This section is coming soon!
+                </div>
+                <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+
+            <div id="qa-section" class="qa-section">
+                <h2>Frequently Asked Questions</h2>
+                
+                <div class="qa-item">
+                    <div class="qa-question" onclick="toggleQA(this)">
+                        How does URL shortening work?
+                        <button class="qa-toggle">+</button>
+                    </div>
+                    <div class="qa-answer">
+                        <p>URL shortening works by taking a long URL and creating a much shorter, unique code that redirects to the original link. When someone visits the short URL, our system automatically redirects them to the original destination. It's like creating a shortcut that's easier to share and remember.</p>
+                    </div>
+                </div>
+
+                <div class="qa-item">
+                    <div class="qa-question" onclick="toggleQA(this)">
+                        Are my shortened links permanent?
+                        <button class="qa-toggle">+</button>
+                    </div>
+                    <div class="qa-answer">
+                        <p>Yes! All shortened links created through urlG.link are permanent and will continue to work indefinitely. Once you create a short link, it will always redirect to your original URL unless you specifically delete it.</p>
+                    </div>
+                </div>
+
+                <div class="qa-item">
+                    <div class="qa-question" onclick="toggleQA(this)">
+                        Can I customize my short links?
+                        <button class="qa-toggle">+</button>
+                    </div>
+                    <div class="qa-answer">
+                        <p>Currently, our system generates pronounceable, memorable codes automatically. We're working on custom alias features that will allow you to create your own custom short links in the future.</p>
+                    </div>
+                </div>
+
+                <div class="qa-item">
+                    <div class="qa-question" onclick="toggleQA(this)">
+                        Is there a limit to how many links I can shorten?
+                        <button class="qa-toggle">+</button>
+                    </div>
+                    <div class="qa-answer">
+                        <p>No limits! You can shorten as many URLs as you want. Our service is designed to handle unlimited link shortening for all users, completely free of charge.</p>
+                    </div>
+                </div>
+
+                <div class="qa-item">
+                    <div class="qa-question" onclick="toggleQA(this)">
+                        How secure are my shortened links?
+                        <button class="qa-toggle">+</button>
+                    </div>
+                    <div class="qa-answer">
+                        <p>Your shortened links are completely secure. We don't store any personal information, and the short codes are randomly generated, making them impossible to guess. Your original URLs remain private and secure.</p>
+                    </div>
+                </div>
+
+                <button class="back-btn" onclick="showHome()">← Back to Home</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let lastShortUrl = '';
+        let copyTimeout = null;
+        const resultBox = document.getElementById('result-box');
+        const errorMessage = document.getElementById('error-message');
+        const aboutSection = document.getElementById('about-section');
+        const blogSection = document.getElementById('blog-section');
+        const legalSection = document.getElementById('legal-section');
+        const supportSection = document.getElementById('support-section');
+        const qaSection = document.getElementById('qa-section');
+        const formContainer = document.querySelector('.form-container');
+        const mainContent = document.querySelector('.main-content');
+        const siteDescription = document.getElementById('site-description');
+        
+        function showAbout() {
+            formContainer.style.display = 'none';
+            aboutSection.style.display = 'block';
+            mainContent.style.justifyContent = 'flex-start';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'none';
+            blogSection.style.display = 'none';
+            legalSection.style.display = 'none';
+            supportSection.style.display = 'none';
+            qaSection.style.display = 'none';
+        }
+
+        function showBlog() {
+            formContainer.style.display = 'none';
+            blogSection.style.display = 'block';
+            mainContent.style.justifyContent = 'flex-start';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'none';
+            aboutSection.style.display = 'none';
+            legalSection.style.display = 'none';
+            supportSection.style.display = 'none';
+            qaSection.style.display = 'none';
+        }
+
+        function showLegal() {
+            formContainer.style.display = 'none';
+            legalSection.style.display = 'block';
+            mainContent.style.justifyContent = 'flex-start';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'none';
+            aboutSection.style.display = 'none';
+            blogSection.style.display = 'none';
+            supportSection.style.display = 'none';
+            qaSection.style.display = 'none';
+        }
+
+        function showSupport() {
+            formContainer.style.display = 'none';
+            supportSection.style.display = 'block';
+            mainContent.style.justifyContent = 'flex-start';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'none';
+            aboutSection.style.display = 'none';
+            blogSection.style.display = 'none';
+            legalSection.style.display = 'none';
+            qaSection.style.display = 'none';
+        }
+
+        function showQA() {
+            formContainer.style.display = 'none';
+            qaSection.style.display = 'block';
+            mainContent.style.justifyContent = 'flex-start';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'none';
+            aboutSection.style.display = 'none';
+            blogSection.style.display = 'none';
+            legalSection.style.display = 'none';
+            supportSection.style.display = 'none';
+        }
+        
+        function showHome() {
+            aboutSection.style.display = 'none';
+            blogSection.style.display = 'none';
+            legalSection.style.display = 'none';
+            supportSection.style.display = 'none';
+            qaSection.style.display = 'none';
+            formContainer.style.display = 'block';
+            mainContent.style.justifyContent = 'center';
+            mainContent.style.paddingTop = '200px';
+            siteDescription.style.display = 'block';
+        }
+        
+        // Make logo clickable to return home
+        document.querySelector('.top-logo').addEventListener('click', showHome);
+        
+        // Make About Us link clickable
+        document.querySelectorAll('.nav-link')[0].addEventListener('click', function(e) {
+            e.preventDefault();
+            showAbout();
+        });
+
+        // Make Blog link clickable
+        document.querySelectorAll('.nav-link')[1].addEventListener('click', function(e) {
+            e.preventDefault();
+            showBlog();
+        });
+
+        // Make Legal link clickable
+        document.querySelectorAll('.nav-link')[2].addEventListener('click', function(e) {
+            e.preventDefault();
+            showLegal();
+        });
+
+        // Make Support link clickable
+        document.querySelectorAll('.nav-link')[3].addEventListener('click', function(e) {
+            e.preventDefault();
+            showSupport();
+        });
+
+        // Make Q&A link clickable
+        document.querySelectorAll('.nav-link')[4].addEventListener('click', function(e) {
+            e.preventDefault();
+            showQA();
+        });
+        
+        function showShortLink() {
+            resultBox.innerHTML = `<div class="short-link-row">
+                <a href="${lastShortUrl}" class="short-link" target="_blank">${lastShortUrl}</a>
+                <button class="copy-btn" id="copy-btn">Copy</button>
+            </div>`;
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.onclick = function() {
+                navigator.clipboard.writeText(lastShortUrl).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    clearTimeout(copyTimeout);
+                    copyTimeout = setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 1200);
+                });
+            };
+        }
+        
+        document.getElementById('shorten-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const longUrl = document.getElementById('long-url').value;
+            const loadingDiv = document.getElementById('loading');
+            errorMessage.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            resultBox.style.display = 'none';
+            
+            try {
+                const res = await fetch('/api/shorten', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: longUrl })
+                });
+                const data = await res.json();
+                if (data.short_url) {
+                    lastShortUrl = data.short_url;
+                    resultBox.style.display = '';
+                    showShortLink();
+                } else {
+                    errorMessage.textContent = 'Error shortening URL. Please try again.';
+                    errorMessage.style.display = '';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Error shortening URL. Please try again.';
+                errorMessage.style.display = '';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+
+        // Accordion functionality for Q&A
+        function toggleQA(questionElement) {
+            const answerElement = questionElement.nextElementSibling;
+            const isActive = questionElement.classList.contains('active');
+
+            // Toggle the clicked answer
+            if (isActive) {
+                // Close this answer
+                questionElement.classList.remove('active');
+                answerElement.style.maxHeight = '0';
+            } else {
+                // Close all other answers first
+                document.querySelectorAll('.qa-item').forEach(item => {
+                    item.classList.remove('active');
+                    item.querySelector('.qa-answer').style.maxHeight = '0';
+                });
+                
+                // Open this answer
+                questionElement.classList.add('active');
+                answerElement.style.maxHeight = answerElement.scrollHeight + 'px';
+            }
+        }
+    </script>
+</body>
+</html>
